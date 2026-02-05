@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthLayout } from '@/components/auth-layout';
 import { Input } from '@/components/ui/input';
@@ -9,14 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-export default function ResetPasswordPage({ params }: { params: { token: string } }) {
-    console.log('Final Params Object:', params); // This log will show the actual params object
+export default function ResetPasswordPage({ params }: { params: Promise<{ token: string }> }) {
+    const { token } = use(params); // Unwrap the params Promise
+    console.log('Unwrapped token:', token);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [tokenValid, setTokenValid] = useState(true); // Assume valid until checked
     const router = useRouter();
-    const { token } = params; // Access token directly from params
 
     useEffect(() => {
         if (!token) {
@@ -86,14 +86,14 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
                             The password reset link is invalid or has expired. Please request a new one.
                         </CardDescription>
                     </CardHeader>
-                        <CardContent className="text-center">
-                            <Button onClick={() => router.push('/forgot-password')}>Request New Link</Button>
-                        </CardContent>
-                    </Card>
-                </AuthLayout>
-            );
-        }
-    
+                    <CardContent className="text-center">
+                        <Button onClick={() => router.push('/forgot-password')}>Request New Link</Button>
+                    </CardContent>
+                </Card>
+            </AuthLayout>
+        );
+    }
+
     return (
         <AuthLayout>
             <Card className="w-full max-w-sm">
