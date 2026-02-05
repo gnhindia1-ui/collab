@@ -9,15 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-export default async function ResetPasswordPage({ params }: { params: { token: string } }) {
-    const resolvedParams = await params; // Explicitly await params to resolve the Promise
-    const { token } = resolvedParams;
-
+export default function ResetPasswordPage({ params }: { params: { token: string } }) {
+    console.log('Final Params Object:', params); // This log will show the actual params object
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [tokenValid, setTokenValid] = useState(true); // Assume valid until checked
     const router = useRouter();
+    const { token } = params; // Access token directly from params
 
     useEffect(() => {
         if (!token) {
@@ -30,7 +29,6 @@ export default async function ResetPasswordPage({ params }: { params: { token: s
         e.preventDefault();
         setLoading(true);
 
-        // currentToken is now directly 'token' from the resolved params
         if (password !== confirmPassword) {
             toast.error('Passwords do not match.');
             setLoading(false);
@@ -43,7 +41,7 @@ export default async function ResetPasswordPage({ params }: { params: { token: s
             return;
         }
 
-        if (!token) { // Check the resolved token
+        if (!token) { // Use the 'token' from the component's scope
             toast.error('Password reset token is missing from the URL. Please ensure you clicked the full link.');
             setLoading(false);
             return;
@@ -55,7 +53,7 @@ export default async function ResetPasswordPage({ params }: { params: { token: s
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ token: currentToken, newPassword: password }),
+                body: JSON.stringify({ token, newPassword: password }), // Use 'token' here
             });
 
             const data = await response.json();
@@ -88,15 +86,14 @@ export default async function ResetPasswordPage({ params }: { params: { token: s
                             The password reset link is invalid or has expired. Please request a new one.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="text-center">
-                        <Button onClick={() => router.push('/forgot-password')}>Request New Link</Button>
-                    </CardContent>
-                </Card>
-            </AuthLayout>
-        );
-    }
-
-
+                        <CardContent className="text-center">
+                            <Button onClick={() => router.push('/forgot-password')}>Request New Link</Button>
+                        </CardContent>
+                    </Card>
+                </AuthLayout>
+            );
+        }
+    
     return (
         <AuthLayout>
             <Card className="w-full max-w-sm">
