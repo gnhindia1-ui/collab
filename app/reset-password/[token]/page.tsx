@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 
 export default function ResetPasswordPage({ params }: { params: Promise<{ token: string }> }) {
     const { token } = use(params); // Unwrap the params Promise
-    console.log('Unwrapped token:', token);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
