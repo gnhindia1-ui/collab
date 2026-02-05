@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'PharmaCatalog - Pharmaceutical Inventory Management',
+  title: 'GNH India',
   description: 'A comprehensive platform for managing pharmaceutical items, tracking inventory, and ensuring compliance.',
   generator: 'v0.app',
   icons: {
