@@ -17,12 +17,18 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
     const router = useRouter();
     const { token } = params;
 
-    // Optional: You might want to verify the token validity on page load
-    // For simplicity, we'll verify it on form submission here.
+    useEffect(() => {
+        if (!token) {
+            setTokenValid(false);
+            toast.error('Password reset token is missing from the URL. Please ensure you clicked the full link.');
+        }
+    }, [token]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+
+        const currentToken = params.token; // Access params.token directly here
 
         if (password !== confirmPassword) {
             toast.error('Passwords do not match.');
@@ -36,10 +42,10 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
             return;
         }
 
-        console.log('Token received:', token);
+        console.log('Token received:', currentToken);
         console.log('New Password entered:', password);
 
-        if (!token) {
+        if (!currentToken) {
             toast.error('Password reset token is missing from the URL. Please ensure you clicked the full link.');
             setLoading(false);
             return;
@@ -51,7 +57,7 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ token, newPassword: password }),
+                body: JSON.stringify({ token: currentToken, newPassword: password }),
             });
 
             const data = await response.json();
