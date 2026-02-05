@@ -36,6 +36,15 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
             return;
         }
 
+        console.log('Token received:', token);
+        console.log('New Password entered:', password);
+
+        if (!token) {
+            toast.error('Password reset token is missing from the URL. Please ensure you clicked the full link.');
+            setLoading(false);
+            return;
+        }
+
         try {
             const response = await fetch('/api/auth/reset-password', {
                 method: 'POST',
