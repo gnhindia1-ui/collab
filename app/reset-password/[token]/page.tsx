@@ -9,14 +9,15 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-export default function ResetPasswordPage({ params }: { params: { token: string } }) {
-    console.log('Page params:', params); // Add this log
+export default async function ResetPasswordPage({ params }: { params: { token: string } }) {
+    const resolvedParams = await params; // Explicitly await params to resolve the Promise
+    const { token } = resolvedParams;
+
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [tokenValid, setTokenValid] = useState(true); // Assume valid until checked
     const router = useRouter();
-    const { token } = params;
 
     useEffect(() => {
         if (!token) {
@@ -29,8 +30,7 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
         e.preventDefault();
         setLoading(true);
 
-        const currentToken = params.token; // Access params.token directly here
-
+        // currentToken is now directly 'token' from the resolved params
         if (password !== confirmPassword) {
             toast.error('Passwords do not match.');
             setLoading(false);
@@ -43,10 +43,7 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
             return;
         }
 
-        console.log('Token received:', currentToken);
-        console.log('New Password entered:', password);
-
-        if (!currentToken) {
+        if (!token) { // Check the resolved token
             toast.error('Password reset token is missing from the URL. Please ensure you clicked the full link.');
             setLoading(false);
             return;
