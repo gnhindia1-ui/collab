@@ -16,11 +16,19 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status') || 'published';
 
-        // Only published blogs are visible to the public by default
-        const [blogs] = await pool.query(
-            'SELECT b.*, u.name as author_name FROM blogs b JOIN users u ON b.author_id = u.id WHERE b.status = ? ORDER BY b.created_at DESC',
-            [status]
-        );
+        // Only published blogs are visible to the public by default, but admin sees all
+        // COALESCE prefers the custom author_name on the blog; if null/empty, falls back to user.name
+        let query = "SELECT b.*, COALESCE(NULLIF(b.author_name, ''), u.name) as author_name, b.author_name as custom_author_name FROM blogs b JOIN users u ON b.author_id = u.id";
+        const queryParams: any[] = [];
+
+        if (status !== 'all') {
+            query += ' WHERE b.status = ?';
+            queryParams.push(status);
+        }
+
+        query += ' ORDER BY b.created_at DESC';
+
+        const [blogs] = await pool.query(query, queryParams);
 
         return NextResponse.json(blogs);
     } catch (error: any) {
@@ -39,17 +47,17 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { title, content, excerpt, status = 'draft' } = await request.json();
+        const { title, slug: providedSlug, author_name, content, excerpt, status = 'draft' } = await request.json();
 
         if (!title || !content) {
             return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
         }
 
-        const slug = `${generateSlug(title)}-${Date.now()}`;
+        const slug = providedSlug || `${generateSlug(title)}-${Date.now()}`;
 
         const [result] = await pool.query<ResultSetHeader>(
-            'INSERT INTO blogs (title, slug, content, excerpt, author_id, status) VALUES (?, ?, ?, ?, ?, ?)',
-            [title, slug, content, excerpt, session.userId, status]
+            'INSERT INTO blogs (title, slug, author_name, content, excerpt, author_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [title, slug, author_name || null, content, excerpt, session.userId, status]
         );
 
         return NextResponse.json({

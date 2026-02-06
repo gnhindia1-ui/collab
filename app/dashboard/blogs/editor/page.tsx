@@ -33,6 +33,8 @@ function BlogEditorContent() {
     const [initialLoading, setInitialLoading] = useState(!!blogId);
     const [formData, setFormData] = useState({
         title: '',
+        slug: '',
+        author_name: '',
         content: '',
         excerpt: '',
         status: 'draft',
@@ -51,6 +53,8 @@ function BlogEditorContent() {
                 const data = await response.json();
                 setFormData({
                     title: data.title,
+                    slug: data.slug,
+                    author_name: data.custom_author_name || '', // Use the raw custom field
                     content: data.content,
                     excerpt: data.excerpt || '',
                     status: data.status,
@@ -150,10 +154,38 @@ function BlogEditorContent() {
                                 id="title"
                                 placeholder="Enter a catchy title..."
                                 value={formData.title}
-                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                onChange={(e) => {
+                                    const newTitle = e.target.value;
+                                    // Auto-generate slug only if creating new post and slug implies it wasn't manually set to something else custom related to old title
+                                    // Simpler: Just auto-update slug if it matches the 'slugified' version of the OLD title, or if it's empty.
+                                    // For now, let's just update it if it's empty or if we are in create mode (no blogId).
+                                    // Actually, standard behavior: update slug if it hasn't been manually touched?
+                                    // Let's just update it if we are creating new post.
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        title: newTitle,
+                                        slug: !blogId && (!prev.slug || prev.slug === prev.title.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-'))
+                                            ? newTitle.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-')
+                                            : prev.slug
+                                    }));
+                                }}
                                 className="text-lg font-medium"
                                 required
                             />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="slug">Slug (URL)</Label>
+                            <Input
+                                id="slug"
+                                placeholder="custom-url-slug"
+                                value={formData.slug}
+                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                                className="font-mono text-sm"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                The unique part of the URL. Leave empty to auto-generate.
+                            </p>
                         </div>
 
                         <div className="space-y-4">
@@ -172,6 +204,20 @@ function BlogEditorContent() {
 
                     <div className="space-y-6">
                         <div className="bg-card border rounded-lg p-6 space-y-6">
+
+                            <div className="space-y-2">
+                                <Label htmlFor="author">Author Name</Label>
+                                <Input
+                                    id="author"
+                                    placeholder="Optional (Default: You)"
+                                    value={formData.author_name}
+                                    onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Override the displayed author name.
+                                </p>
+                            </div>
+
                             <div className="space-y-2">
                                 <Label htmlFor="status">Publishing Status</Label>
                                 <Select

@@ -5,14 +5,15 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id_or_slug: string } }
+    { params }: { params: Promise<{ id_or_slug: string }> }
 ) {
     try {
-        const idOrSlug = params.id_or_slug;
+        const { id_or_slug } = await params;
+        const idOrSlug = id_or_slug;
         const isId = !isNaN(Number(idOrSlug));
 
         const [blogs] = await pool.query<RowDataPacket[]>(
-            `SELECT b.*, u.name as author_name FROM blogs b JOIN users u ON b.author_id = u.id WHERE b.${isId ? 'id' : 'slug'} = ?`,
+            `SELECT b.*, COALESCE(NULLIF(b.author_name, ''), u.name) as author_name, b.author_name as custom_author_name FROM blogs b JOIN users u ON b.author_id = u.id WHERE b.${isId ? 'id' : 'slug'} = ?`,
             [idOrSlug]
         );
 
@@ -32,7 +33,7 @@ export async function GET(
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id_or_slug: string } }
+    { params }: { params: Promise<{ id_or_slug: string }> }
 ) {
     try {
         const session = await getSession();
@@ -40,8 +41,9 @@ export async function PATCH(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const id = params.id_or_slug; // For PATCH we expect the ID
-        const { title, content, excerpt, status } = await request.json();
+        const { id_or_slug } = await params;
+        const id = id_or_slug; // For PATCH we expect the ID
+        const { title, slug, author_name, content, excerpt, status } = await request.json();
 
         const [blogs] = await pool.query<RowDataPacket[]>(
             'SELECT author_id FROM blogs WHERE id = ?',
@@ -52,15 +54,17 @@ export async function PATCH(
             return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
         }
 
-        // Only author or Superadmin can edit
-        if (blogs[0].author_id !== session.userId && session.role !== 2) {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
+        // REMOVED: Strict ownership check. Now any authenticated admin (Role 1 or 2) can edit any post.
+        // if (blogs[0].author_id !== session.userId && session.role !== 2) {
+        //    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        // }
 
         const updates: string[] = [];
         const values: any[] = [];
 
         if (title) { updates.push('title = ?'); values.push(title); }
+        if (slug) { updates.push('slug = ?'); values.push(slug); }
+        if (author_name !== undefined) { updates.push('author_name = ?'); values.push(author_name); } // Allow empty string to reset
         if (content) { updates.push('content = ?'); values.push(content); }
         if (excerpt) { updates.push('excerpt = ?'); values.push(excerpt); }
         if (status) { updates.push('status = ?'); values.push(status); }
@@ -87,7 +91,7 @@ export async function PATCH(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id_or_slug: string } }
+    { params }: { params: Promise<{ id_or_slug: string }> }
 ) {
     try {
         const session = await getSession();
@@ -95,7 +99,8 @@ export async function DELETE(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const id = params.id_or_slug;
+        const { id_or_slug } = await params;
+        const id = id_or_slug;
 
         const [blogs] = await pool.query<RowDataPacket[]>(
             'SELECT author_id FROM blogs WHERE id = ?',
@@ -106,10 +111,10 @@ export async function DELETE(
             return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
         }
 
-        // Only author or Superadmin can delete
-        if (blogs[0].author_id !== session.userId && session.role !== 2) {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
+        // REMOVED: Strict ownership check. Now any authenticated admin (Role 1 or 2) can delete any post.
+        // if (blogs[0].author_id !== session.userId && session.role !== 2) {
+        //     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        // }
 
         await pool.query('DELETE FROM blogs WHERE id = ?', [id]);
 
