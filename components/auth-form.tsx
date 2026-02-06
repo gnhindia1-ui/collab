@@ -78,7 +78,14 @@ export function AuthForm({ mode, onModeChange }: AuthFormProps) {
         const data = await response.json()
 
         if (!response.ok) {
-          toast.error(data.error || "Login failed")
+          const errorMessage = data.error || "Login failed";
+          if (response.status === 401) {
+            toast.error("Invalid email or password. Please try again.");
+          } else if (response.status === 404) {
+            toast.error("User not found. Please create an account.");
+          } else {
+            toast.error(errorMessage);
+          }
           setIsLoading(false)
           return
         }

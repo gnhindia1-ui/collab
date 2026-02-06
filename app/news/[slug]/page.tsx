@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { ArrowLeft, Calendar, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Navbar } from '@/components/navbar';
 
 interface WebNews {
     news_title: string;
@@ -59,17 +60,7 @@ export default function NewsDetailPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            <header className="border-b py-6 bg-card sticky top-0 z-50 backdrop-blur-md bg-card/80">
-                <div className="container mx-auto px-4 flex justify-between items-center">
-                    <Link href="/">
-                        <Image src="/logo.svg" alt="Logo" width={150} height={40} className="object-contain" />
-                    </Link>
-                    <Button variant="ghost" onClick={() => router.push('/news')} className="gap-2">
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to News
-                    </Button>
-                </div>
-            </header>
+            <Navbar />
 
             <main className="container mx-auto py-16 px-4 max-w-3xl">
                 <article className="prose prose-lg dark:prose-invert mx-auto">

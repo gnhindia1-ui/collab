@@ -130,11 +130,6 @@ export default function EventsDashboardPage() {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
-                                            <Link href={`/events/${event.events_slug}`} target="_blank">
-                                                <Button variant="ghost" size="icon" title="View Publicly">
-                                                    <Globe className="h-4 w-4" />
-                                                </Button>
-                                            </Link>
                                             <Link href={`/dashboard/events/editor?id=${event.events_id}`}>
                                                 <Button variant="ghost" size="icon" title="Edit">
                                                     <Edit className="h-4 w-4" />

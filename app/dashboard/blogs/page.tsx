@@ -126,11 +126,6 @@ export default function BlogsPage() {
                                     <TableCell>{new Date(blog.blog_created).toLocaleDateString()}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
-                                            <Link href={`/blogs/${blog.blog_slug}`} target="_blank">
-                                                <Button variant="ghost" size="icon" title="View Publicly">
-                                                    <Globe className="h-4 w-4" />
-                                                </Button>
-                                            </Link>
                                             <Link href={`/dashboard/blogs/editor?id=${blog.blog_id}`}>
                                                 <Button variant="ghost" size="icon" title="Edit">
                                                     <Edit className="h-4 w-4" />

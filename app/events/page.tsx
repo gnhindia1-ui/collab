@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Calendar, ArrowRight, User } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Navbar } from '@/components/navbar';
 
 interface WebEvent {
     events_id: number;
@@ -42,18 +43,7 @@ export default function PublicEventsListPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            <header className="border-b py-6 bg-card">
-                <div className="container mx-auto px-4 flex justify-between items-center">
-                    <Link href="/">
-                        <Image src="/logo.svg" alt="Logo" width={150} height={40} className="object-contain" />
-                    </Link>
-                    <nav className="flex gap-4">
-                        <Link href="/" className="text-sm font-medium hover:text-primary">Home</Link>
-                        <Link href="/blogs" className="text-sm font-medium hover:text-primary">Blog</Link>
-                        <Link href="/events" className="text-sm font-medium text-primary underline underline-offset-4">Events</Link>
-                    </nav>
-                </div>
-            </header>
+            <Navbar />
 
             <main className="container mx-auto py-12 px-4">
                 <div className="mb-12 text-center">

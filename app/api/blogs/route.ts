@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
-import { ResultSetHeader } from 'mysql2/promise';
+import { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 
 // Helper to generate a slug from a title
 // Helper to generate a slug from a title

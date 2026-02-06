@@ -122,7 +122,7 @@ function NewsEditorContent() {
     }
 
     return (
-        <div className="container mx-auto py-10 px-4 max-w-4xl">
+        <div className="container mx-auto py-10 px-4 max-w-7xl">
             <div className="mb-8 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" onClick={() => router.back()}>

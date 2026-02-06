@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = React.useState<User | null>(null)
   const [isLoading, setIsLoading] = React.useState(true)
+  const [stats, setStats] = React.useState({ products: 0, blogs: 0, events: 0, news: 0 })
 
   React.useEffect(() => {
     // Fetch current user
@@ -65,7 +66,21 @@ export default function DashboardPage() {
       }
     }
 
+    // Fetch stats
+    async function fetchStats() {
+      try {
+        const response = await fetch("/api/stats")
+        if (response.ok) {
+          const data = await response.json()
+          setStats(data)
+        }
+      } catch (error) {
+        console.error("Failed to fetch stats:", error)
+      }
+    }
+
     fetchUser()
+    fetchStats()
   }, [router])
 
   const handleLogout = async () => {
@@ -78,10 +93,6 @@ export default function DashboardPage() {
       toast.error("Failed to logout")
     }
   }
-
-
-
-
 
   // Get user initials for avatar
   const getInitials = (name: string) => {
@@ -113,7 +124,7 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-6">
             <div className="flex h-10 w-auto items-center justify-center">
               <Image
                 src="/logo.svg"
@@ -124,6 +135,31 @@ export default function DashboardPage() {
                 priority
               />
             </div>
+
+            {/* Main Navigation Links */}
+            <nav className="hidden md:flex items-center gap-4 border-l pl-6 ml-2 h-8">
+              <span
+                onClick={() => router.push("/dashboard/blogs")}
+                className="text-sm font-medium hover:text-primary cursor-pointer flex items-center gap-2 transition-colors"
+              >
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                Blogs
+              </span>
+              <span
+                onClick={() => router.push("/dashboard/events")}
+                className="text-sm font-medium hover:text-primary cursor-pointer flex items-center gap-2 transition-colors"
+              >
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                Events
+              </span>
+              <span
+                onClick={() => router.push("/dashboard/news")}
+                className="text-sm font-medium hover:text-primary cursor-pointer flex items-center gap-2 transition-colors"
+              >
+                <Newspaper className="h-4 w-4 text-muted-foreground" />
+                News
+              </span>
+            </nav>
           </div>
 
           <div className="flex items-center gap-2">
@@ -162,18 +198,6 @@ export default function DashboardPage() {
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/dashboard/blogs")}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Manage Blogs
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/dashboard/events")}>
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Manage Events
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/dashboard/news")}>
-                  <Newspaper className="mr-2 h-4 w-4" />
-                  Manage News
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
@@ -188,22 +212,66 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="p-4 sm:p-6 lg:p-8 w-full max-w-[98%] mx-auto">
         <div className="space-y-6">
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/dashboard')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.products}</div>
+                <p className="text-xs text-muted-foreground">Active inventory items</p>
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/dashboard/blogs')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Blogs Published</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.blogs}</div>
+                <p className="text-xs text-muted-foreground">Articles and updates</p>
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/dashboard/events')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Events</CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.events}</div>
+                <p className="text-xs text-muted-foreground">Upcoming and past</p>
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/dashboard/news')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">News Articles</CardTitle>
+                <Newspaper className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.news}</div>
+                <p className="text-xs text-muted-foreground">Press and announcements</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="border-t pt-6"></div>
+
           {/* Page Header */}
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Pharmaceutical Items</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Select an item to edit
+              Select an item to edit or manage inventory
             </p>
           </div>
-
-
 
           {/* Items Table */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                Items
+                Inventory List
               </CardTitle>
             </CardHeader>
             <CardContent>
