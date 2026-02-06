@@ -13,7 +13,7 @@ export async function GET(
         const isId = !isNaN(Number(idOrSlug));
 
         const [blogs] = await pool.query<RowDataPacket[]>(
-            `SELECT b.*, COALESCE(NULLIF(b.author_name, ''), u.name) as author_name, b.author_name as custom_author_name FROM blogs b JOIN users u ON b.author_id = u.id WHERE b.${isId ? 'id' : 'slug'} = ?`,
+            `SELECT b.*, b.blog_author as display_author_name FROM blogs b WHERE b.${isId ? 'blog_id' : 'blog_slug'} = ?`,
             [idOrSlug]
         );
 
@@ -43,10 +43,20 @@ export async function PATCH(
 
         const { id_or_slug } = await params;
         const id = id_or_slug; // For PATCH we expect the ID
-        const { title, slug, author_name, content, excerpt, status } = await request.json();
+        const {
+            blog_title,
+            blog_slug,
+            blog_author,
+            blog_content,
+            blog_heroimg,
+            blog_tag,
+            blog_keywords,
+            blog_description,
+            blog_ispub
+        } = await request.json();
 
         const [blogs] = await pool.query<RowDataPacket[]>(
-            'SELECT author_id FROM blogs WHERE id = ?',
+            'SELECT blog_id FROM blogs WHERE blog_id = ?',
             [id]
         );
 
@@ -54,20 +64,20 @@ export async function PATCH(
             return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
         }
 
-        // REMOVED: Strict ownership check. Now any authenticated admin (Role 1 or 2) can edit any post.
-        // if (blogs[0].author_id !== session.userId && session.role !== 2) {
-        //    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        // }
+        // REMOVED: Strict ownership check.
 
         const updates: string[] = [];
         const values: any[] = [];
 
-        if (title) { updates.push('title = ?'); values.push(title); }
-        if (slug) { updates.push('slug = ?'); values.push(slug); }
-        if (author_name !== undefined) { updates.push('author_name = ?'); values.push(author_name); } // Allow empty string to reset
-        if (content) { updates.push('content = ?'); values.push(content); }
-        if (excerpt) { updates.push('excerpt = ?'); values.push(excerpt); }
-        if (status) { updates.push('status = ?'); values.push(status); }
+        if (blog_title) { updates.push('blog_title = ?'); values.push(blog_title); }
+        if (blog_slug) { updates.push('blog_slug = ?'); values.push(blog_slug); }
+        if (blog_author !== undefined) { updates.push('blog_author = ?'); values.push(blog_author); }
+        if (blog_content) { updates.push('blog_content = ?'); values.push(blog_content); }
+        if (blog_heroimg !== undefined) { updates.push('blog_heroimg = ?'); values.push(blog_heroimg); }
+        if (blog_tag !== undefined) { updates.push('blog_tag = ?'); values.push(blog_tag); }
+        if (blog_keywords !== undefined) { updates.push('blog_keywords = ?'); values.push(blog_keywords); }
+        if (blog_description !== undefined) { updates.push('blog_description = ?'); values.push(blog_description); }
+        if (blog_ispub !== undefined) { updates.push('blog_ispub = ?'); values.push(blog_ispub); }
 
         if (updates.length === 0) {
             return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
@@ -75,7 +85,7 @@ export async function PATCH(
 
         values.push(id);
         await pool.query(
-            `UPDATE blogs SET ${updates.join(', ')} WHERE id = ?`,
+            `UPDATE blogs SET ${updates.join(', ')} WHERE blog_id = ?`,
             values
         );
 
@@ -103,7 +113,7 @@ export async function DELETE(
         const id = id_or_slug;
 
         const [blogs] = await pool.query<RowDataPacket[]>(
-            'SELECT author_id FROM blogs WHERE id = ?',
+            'SELECT author_id FROM blogs WHERE blog_id = ?',
             [id]
         );
 
@@ -111,12 +121,9 @@ export async function DELETE(
             return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
         }
 
-        // REMOVED: Strict ownership check. Now any authenticated admin (Role 1 or 2) can delete any post.
-        // if (blogs[0].author_id !== session.userId && session.role !== 2) {
-        //     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        // }
+        // REMOVED: Strict ownership check.
 
-        await pool.query('DELETE FROM blogs WHERE id = ?', [id]);
+        await pool.query('DELETE FROM blogs WHERE blog_id = ?', [id]);
 
         return NextResponse.json({ message: 'Blog deleted successfully' });
     } catch (error: any) {

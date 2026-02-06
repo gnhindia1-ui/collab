@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Edit, Trash2, Globe, FileText } from 'lucide-react';
+import { Plus, Edit, Trash2, Globe, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -15,56 +15,56 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
-interface Blog {
-    blog_id: number;
-    blog_title: string;
-    blog_slug: string;
-    blog_ispub: number;
-    display_author_name: string;
-    blog_created: string;
+interface WebEvent {
+    events_id: number;
+    events_title: string;
+    events_slug: string;
+    events_start: string;
+    events_end: string;
+    events_ispub: number;
 }
 
-export default function BlogsPage() {
-    const [blogs, setBlogs] = useState<Blog[]>([]);
+export default function EventsDashboardPage() {
+    const [events, setEvents] = useState<WebEvent[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchBlogs();
+        fetchEvents();
     }, []);
 
-    const fetchBlogs = async () => {
+    const fetchEvents = async () => {
         try {
-            const response = await fetch('/api/blogs?status=all');
+            const response = await fetch('/api/events?status=all');
             if (response.ok) {
                 const data = await response.json();
-                setBlogs(data);
+                setEvents(data);
             } else {
-                toast.error('Failed to fetch blogs');
+                toast.error('Failed to fetch events');
             }
         } catch (error) {
-            console.error('Fetch blogs error:', error);
+            console.error('Fetch events error:', error);
             toast.error('Error connecting to API');
         } finally {
             setLoading(false);
         }
     };
 
-    const deleteBlog = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this blog post?')) return;
+    const deleteEvent = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this event?')) return;
 
         try {
-            const response = await fetch(`/api/blogs/${id}`, {
+            const response = await fetch(`/api/events/${id}`, {
                 method: 'DELETE',
             });
 
             if (response.ok) {
-                toast.success('Blog deleted successfully');
-                setBlogs(blogs.filter((b) => b.blog_id !== id));
+                toast.success('Event deleted successfully');
+                setEvents(events.filter((e) => e.events_id !== id));
             } else {
-                toast.error('Failed to delete blog');
+                toast.error('Failed to delete event');
             }
         } catch (error) {
-            console.error('Delete blog error:', error);
+            console.error('Delete event error:', error);
             toast.error('Error connecting to API');
         }
     };
@@ -73,13 +73,13 @@ export default function BlogsPage() {
         <div className="container mx-auto py-10 px-4">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold">Blog Management</h1>
-                    <p className="text-muted-foreground mt-2">Manage your blog posts and articles.</p>
+                    <h1 className="text-3xl font-bold">Events Management</h1>
+                    <p className="text-muted-foreground mt-2">Manage your upcoming web events.</p>
                 </div>
-                <Link href="/dashboard/blogs/editor">
+                <Link href="/dashboard/events/editor">
                     <Button className="flex items-center gap-2">
                         <Plus className="h-4 w-4" />
-                        Create New Post
+                        Create New Event
                     </Button>
                 </Link>
             </div>
@@ -89,9 +89,9 @@ export default function BlogsPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Title</TableHead>
-                            <TableHead>Author</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Date</TableHead>
+                            <TableHead>Start Date</TableHead>
+                            <TableHead>End Date</TableHead>
+                            <TableHead>Public</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -99,39 +99,43 @@ export default function BlogsPage() {
                         {loading ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-10">
-                                    Loading blogs...
+                                    Loading events...
                                 </TableCell>
                             </TableRow>
-                        ) : blogs.length === 0 ? (
+                        ) : events.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-10">
-                                    No blog posts found. Create your first post!
+                                    No events found. Create your first event!
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            blogs.map((blog) => (
-                                <TableRow key={blog.blog_id}>
+                            events.map((event) => (
+                                <TableRow key={event.events_id}>
                                     <TableCell className="font-medium">
                                         <div className="flex flex-col">
-                                            <span>{blog.blog_title}</span>
-                                            <span className="text-xs text-muted-foreground">/{blog.blog_slug}</span>
+                                            <span>{event.events_title}</span>
+                                            <span className="text-xs text-muted-foreground">/{event.events_slug}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell>{blog.display_author_name}</TableCell>
                                     <TableCell>
-                                        <Badge variant={blog.blog_ispub === 1 ? 'default' : 'secondary'}>
-                                            {blog.blog_ispub === 1 ? 'Published' : 'Draft'}
+                                        {event.events_start ? new Date(event.events_start).toLocaleDateString() : '-'}
+                                    </TableCell>
+                                    <TableCell>
+                                        {event.events_end ? new Date(event.events_end).toLocaleDateString() : '-'}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant={event.events_ispub === 1 ? 'default' : 'secondary'}>
+                                            {event.events_ispub === 1 ? 'Yes' : 'No'}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{new Date(blog.blog_created).toLocaleDateString()}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
-                                            <Link href={`/blogs/${blog.blog_slug}`} target="_blank">
+                                            <Link href={`/events/${event.events_slug}`} target="_blank">
                                                 <Button variant="ghost" size="icon" title="View Publicly">
                                                     <Globe className="h-4 w-4" />
                                                 </Button>
                                             </Link>
-                                            <Link href={`/dashboard/blogs/editor?id=${blog.blog_id}`}>
+                                            <Link href={`/dashboard/events/editor?id=${event.events_id}`}>
                                                 <Button variant="ghost" size="icon" title="Edit">
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
@@ -141,7 +145,7 @@ export default function BlogsPage() {
                                                 size="icon"
                                                 title="Delete"
                                                 className="text-destructive hover:bg-destructive/10"
-                                                onClick={() => deleteBlog(blog.blog_id)}
+                                                onClick={() => deleteEvent(event.events_id)}
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>

@@ -11,6 +11,8 @@ import {
   Edit,
   Package,
   FileText,
+  Calendar,
+  Newspaper,
 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
@@ -163,6 +165,14 @@ export default function DashboardPage() {
                 <DropdownMenuItem onClick={() => router.push("/dashboard/blogs")}>
                   <FileText className="mr-2 h-4 w-4" />
                   Manage Blogs
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/dashboard/events")}>
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Manage Events
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/dashboard/news")}>
+                  <Newspaper className="mr-2 h-4 w-4" />
+                  Manage News
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">

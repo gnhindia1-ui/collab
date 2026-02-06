@@ -32,12 +32,15 @@ function BlogEditorContent() {
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(!!blogId);
     const [formData, setFormData] = useState({
-        title: '',
-        slug: '',
-        author_name: '',
-        content: '',
-        excerpt: '',
-        status: 'draft',
+        blog_title: '',
+        blog_slug: '',
+        blog_heroimg: '',
+        blog_author: '',
+        blog_content: '',
+        blog_tag: '',
+        blog_keywords: '',
+        blog_description: '',
+        blog_ispub: 0, // 0 for draft, 1 for published
     });
 
     useEffect(() => {
@@ -52,12 +55,15 @@ function BlogEditorContent() {
             if (response.ok) {
                 const data = await response.json();
                 setFormData({
-                    title: data.title,
-                    slug: data.slug,
-                    author_name: data.custom_author_name || '', // Use the raw custom field
-                    content: data.content,
-                    excerpt: data.excerpt || '',
-                    status: data.status,
+                    blog_title: data.blog_title,
+                    blog_slug: data.blog_slug,
+                    blog_heroimg: data.blog_heroimg || '',
+                    blog_author: data.display_author_name || '', // Use the resolved author name logic from API
+                    blog_content: data.blog_content,
+                    blog_tag: data.blog_tag || '',
+                    blog_keywords: data.blog_keywords || '',
+                    blog_description: data.blog_description || '',
+                    blog_ispub: data.blog_ispub,
                 });
             } else {
                 toast.error('Failed to load blog post');
@@ -72,7 +78,7 @@ function BlogEditorContent() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.title || !formData.content) {
+        if (!formData.blog_title || !formData.blog_content) {
             toast.error('Title and content are required');
             return;
         }
@@ -149,24 +155,20 @@ function BlogEditorContent() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="md:col-span-2 space-y-6">
                         <div className="space-y-2">
-                            <Label htmlFor="title">Title</Label>
+                            <Label htmlFor="blog_title">Blog Title</Label>
                             <Input
-                                id="title"
+                                id="blog_title"
                                 placeholder="Enter a catchy title..."
-                                value={formData.title}
+                                value={formData.blog_title}
                                 onChange={(e) => {
                                     const newTitle = e.target.value;
-                                    // Auto-generate slug only if creating new post and slug implies it wasn't manually set to something else custom related to old title
-                                    // Simpler: Just auto-update slug if it matches the 'slugified' version of the OLD title, or if it's empty.
-                                    // For now, let's just update it if it's empty or if we are in create mode (no blogId).
-                                    // Actually, standard behavior: update slug if it hasn't been manually touched?
-                                    // Let's just update it if we are creating new post.
                                     setFormData(prev => ({
                                         ...prev,
-                                        title: newTitle,
-                                        slug: !blogId && (!prev.slug || prev.slug === prev.title.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-'))
+                                        blog_title: newTitle,
+                                        // Auto-generate slug if creating new and slug is empty or default
+                                        blog_slug: !blogId && (!prev.blog_slug || prev.blog_slug === prev.blog_title.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-'))
                                             ? newTitle.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-')
-                                            : prev.slug
+                                            : prev.blog_slug
                                     }));
                                 }}
                                 className="text-lg font-medium"
@@ -175,26 +177,26 @@ function BlogEditorContent() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="slug">Slug (URL)</Label>
+                            <Label htmlFor="blog_slug">Slug (URL)</Label>
                             <Input
-                                id="slug"
+                                id="blog_slug"
                                 placeholder="custom-url-slug"
-                                value={formData.slug}
-                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                                value={formData.blog_slug}
+                                onChange={(e) => setFormData({ ...formData, blog_slug: e.target.value })}
                                 className="font-mono text-sm"
                             />
                             <p className="text-xs text-muted-foreground">
-                                The unique part of the URL. Leave empty to auto-generate.
+                                Unique URL path. Leave empty to auto-generate.
                             </p>
                         </div>
 
                         <div className="space-y-4">
-                            <Label htmlFor="content">Content</Label>
+                            <Label htmlFor="blog_content">Content</Label>
                             <div className="bg-card min-h-[600px] border rounded-md overflow-hidden">
                                 <ReactQuill
                                     theme="snow"
-                                    value={formData.content}
-                                    onChange={(content) => setFormData({ ...formData, content })}
+                                    value={formData.blog_content}
+                                    onChange={(content) => setFormData({ ...formData, blog_content: content })}
                                     modules={modules}
                                     className="h-[550px]"
                                 />
@@ -206,60 +208,73 @@ function BlogEditorContent() {
                         <div className="bg-card border rounded-lg p-6 space-y-6">
 
                             <div className="space-y-2">
-                                <Label htmlFor="author">Author Name</Label>
-                                <Input
-                                    id="author"
-                                    placeholder="Optional (Default: You)"
-                                    value={formData.author_name}
-                                    onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    Override the displayed author name.
-                                </p>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="status">Publishing Status</Label>
+                                <Label htmlFor="blog_ispub">Publishing Status</Label>
                                 <Select
-                                    value={formData.status}
-                                    onValueChange={(value) => setFormData({ ...formData, status: value })}
+                                    value={formData.blog_ispub.toString()}
+                                    onValueChange={(value) => setFormData({ ...formData, blog_ispub: parseInt(value) })}
                                 >
-                                    <SelectTrigger id="status">
+                                    <SelectTrigger id="blog_ispub">
                                         <SelectValue placeholder="Select status" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="draft">Draft</SelectItem>
-                                        <SelectItem value="published">Published</SelectItem>
+                                        <SelectItem value="0">Draft</SelectItem>
+                                        <SelectItem value="1">Published</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <p className="text-xs text-muted-foreground pt-1">
-                                    Drafts are only visible to admins.
-                                </p>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="excerpt">Short Description (Excerpt)</Label>
-                                <Textarea
-                                    id="excerpt"
-                                    placeholder="A brief summary for the preview..."
-                                    rows={4}
-                                    value={formData.excerpt}
-                                    onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                                <Label htmlFor="blog_author">Author Name</Label>
+                                <Input
+                                    id="blog_author"
+                                    placeholder="Optional (Default: You)"
+                                    value={formData.blog_author}
+                                    onChange={(e) => setFormData({ ...formData, blog_author: e.target.value })}
                                 />
-                                <p className="text-xs text-muted-foreground">
-                                    Visible on the blog list page.
-                                </p>
+                                <p className="text-xs text-muted-foreground">Override displayed author.</p>
                             </div>
 
-                            <div className="pt-4 space-y-2">
-                                <Label className="block text-sm font-medium mb-1">Editor Tips</Label>
-                                <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1">
-                                    <li>Use H1 and H2 for headings</li>
-                                    <li>Bold for emphasis</li>
-                                    <li>Link articles for better SEO</li>
-                                    <li>Add images to keep readers engaged</li>
-                                </ul>
+                            <div className="space-y-2">
+                                <Label htmlFor="blog_heroimg">Hero Image URL</Label>
+                                <Input
+                                    id="blog_heroimg"
+                                    placeholder="https://..."
+                                    value={formData.blog_heroimg}
+                                    onChange={(e) => setFormData({ ...formData, blog_heroimg: e.target.value })}
+                                />
                             </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="blog_description">SEO Description</Label>
+                                <Textarea
+                                    id="blog_description"
+                                    placeholder="Short summary for SEO and previews..."
+                                    rows={3}
+                                    value={formData.blog_description}
+                                    onChange={(e) => setFormData({ ...formData, blog_description: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="blog_tag">Tags</Label>
+                                <Input
+                                    id="blog_tag"
+                                    placeholder="Comma separated tags..."
+                                    value={formData.blog_tag}
+                                    onChange={(e) => setFormData({ ...formData, blog_tag: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="blog_keywords">Keywords</Label>
+                                <Input
+                                    id="blog_keywords"
+                                    placeholder="Comma separated keywords..."
+                                    value={formData.blog_keywords}
+                                    onChange={(e) => setFormData({ ...formData, blog_keywords: e.target.value })}
+                                />
+                            </div>
+
                         </div>
                     </div>
                 </div>

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Edit, Trash2, Globe, FileText } from 'lucide-react';
+import { Plus, Edit, Trash2, Globe, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -15,56 +15,56 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
-interface Blog {
-    blog_id: number;
-    blog_title: string;
-    blog_slug: string;
-    blog_ispub: number;
-    display_author_name: string;
-    blog_created: string;
+interface WebNews {
+    news_id: number;
+    news_title: string;
+    news_slug: string;
+    news_ispub: number;
+    news_created: string;
+    news_view: number;
 }
 
-export default function BlogsPage() {
-    const [blogs, setBlogs] = useState<Blog[]>([]);
+export default function NewsDashboardPage() {
+    const [newsList, setNewsList] = useState<WebNews[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchBlogs();
+        fetchNews();
     }, []);
 
-    const fetchBlogs = async () => {
+    const fetchNews = async () => {
         try {
-            const response = await fetch('/api/blogs?status=all');
+            const response = await fetch('/api/news?status=all');
             if (response.ok) {
                 const data = await response.json();
-                setBlogs(data);
+                setNewsList(data);
             } else {
-                toast.error('Failed to fetch blogs');
+                toast.error('Failed to fetch news');
             }
         } catch (error) {
-            console.error('Fetch blogs error:', error);
+            console.error('Fetch news error:', error);
             toast.error('Error connecting to API');
         } finally {
             setLoading(false);
         }
     };
 
-    const deleteBlog = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this blog post?')) return;
+    const deleteNews = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this news article?')) return;
 
         try {
-            const response = await fetch(`/api/blogs/${id}`, {
+            const response = await fetch(`/api/news/${id}`, {
                 method: 'DELETE',
             });
 
             if (response.ok) {
-                toast.success('Blog deleted successfully');
-                setBlogs(blogs.filter((b) => b.blog_id !== id));
+                toast.success('News deleted successfully');
+                setNewsList(newsList.filter((n) => n.news_id !== id));
             } else {
-                toast.error('Failed to delete blog');
+                toast.error('Failed to delete news');
             }
         } catch (error) {
-            console.error('Delete blog error:', error);
+            console.error('Delete news error:', error);
             toast.error('Error connecting to API');
         }
     };
@@ -73,13 +73,13 @@ export default function BlogsPage() {
         <div className="container mx-auto py-10 px-4">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold">Blog Management</h1>
-                    <p className="text-muted-foreground mt-2">Manage your blog posts and articles.</p>
+                    <h1 className="text-3xl font-bold">News Management</h1>
+                    <p className="text-muted-foreground mt-2">Manage your news and press releases.</p>
                 </div>
-                <Link href="/dashboard/blogs/editor">
+                <Link href="/dashboard/news/editor">
                     <Button className="flex items-center gap-2">
                         <Plus className="h-4 w-4" />
-                        Create New Post
+                        Create New Article
                     </Button>
                 </Link>
             </div>
@@ -89,9 +89,9 @@ export default function BlogsPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Title</TableHead>
-                            <TableHead>Author</TableHead>
-                            <TableHead>Status</TableHead>
+                            <TableHead>Views</TableHead>
                             <TableHead>Date</TableHead>
+                            <TableHead>Status</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -99,39 +99,44 @@ export default function BlogsPage() {
                         {loading ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-10">
-                                    Loading blogs...
+                                    Loading news...
                                 </TableCell>
                             </TableRow>
-                        ) : blogs.length === 0 ? (
+                        ) : newsList.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-10">
-                                    No blog posts found. Create your first post!
+                                    No news articles found. Create your first one!
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            blogs.map((blog) => (
-                                <TableRow key={blog.blog_id}>
+                            newsList.map((news) => (
+                                <TableRow key={news.news_id}>
                                     <TableCell className="font-medium">
                                         <div className="flex flex-col">
-                                            <span>{blog.blog_title}</span>
-                                            <span className="text-xs text-muted-foreground">/{blog.blog_slug}</span>
+                                            <span>{news.news_title}</span>
+                                            <span className="text-xs text-muted-foreground">/{news.news_slug}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell>{blog.display_author_name}</TableCell>
                                     <TableCell>
-                                        <Badge variant={blog.blog_ispub === 1 ? 'default' : 'secondary'}>
-                                            {blog.blog_ispub === 1 ? 'Published' : 'Draft'}
+                                        <div className="flex items-center gap-1 text-muted-foreground">
+                                            <Eye className="h-3 w-3" />
+                                            {news.news_view}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{new Date(news.news_created).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={news.news_ispub === 1 ? 'default' : 'secondary'}>
+                                            {news.news_ispub === 1 ? 'Published' : 'Draft'}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{new Date(blog.blog_created).toLocaleDateString()}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
-                                            <Link href={`/blogs/${blog.blog_slug}`} target="_blank">
+                                            <Link href={`/news/${news.news_slug}`} target="_blank">
                                                 <Button variant="ghost" size="icon" title="View Publicly">
                                                     <Globe className="h-4 w-4" />
                                                 </Button>
                                             </Link>
-                                            <Link href={`/dashboard/blogs/editor?id=${blog.blog_id}`}>
+                                            <Link href={`/dashboard/news/editor?id=${news.news_id}`}>
                                                 <Button variant="ghost" size="icon" title="Edit">
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
@@ -141,7 +146,7 @@ export default function BlogsPage() {
                                                 size="icon"
                                                 title="Delete"
                                                 className="text-destructive hover:bg-destructive/10"
-                                                onClick={() => deleteBlog(blog.blog_id)}
+                                                onClick={() => deleteNews(news.news_id)}
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>

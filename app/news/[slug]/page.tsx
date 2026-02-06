@@ -4,43 +4,41 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Calendar, User, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-interface Blog {
-    blog_title: string;
-    blog_content: string;
-    display_author_name: string;
-    blog_created: string;
-    blog_heroimg?: string;
-    blog_tag?: string;
+interface WebNews {
+    news_title: string;
+    news_content: string;
+    news_created: string;
+    news_img?: string;
 }
 
-export default function BlogPostDetailPage() {
+export default function NewsDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const [blog, setBlog] = useState<Blog | null>(null);
+    const [news, setNews] = useState<WebNews | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (params.slug) {
-            fetchBlog();
+            fetchNews();
         }
     }, [params.slug]);
 
-    const fetchBlog = async () => {
+    const fetchNews = async () => {
         try {
-            const response = await fetch(`/api/blogs/${params.slug}`);
+            const response = await fetch(`/api/news/${params.slug}`);
             if (response.ok) {
                 const data = await response.json();
-                setBlog(data);
+                setNews(data);
             } else {
-                toast.error('Blog post not found');
-                router.push('/blogs');
+                toast.error('News article not found');
+                router.push('/news');
             }
         } catch (error) {
-            console.error('Fetch blog error:', error);
+            console.error('Fetch news error:', error);
         } finally {
             setLoading(false);
         }
@@ -57,7 +55,7 @@ export default function BlogPostDetailPage() {
         );
     }
 
-    if (!blog) return null;
+    if (!news) return null;
 
     return (
         <div className="min-h-screen bg-background">
@@ -66,9 +64,9 @@ export default function BlogPostDetailPage() {
                     <Link href="/">
                         <Image src="/logo.svg" alt="Logo" width={150} height={40} className="object-contain" />
                     </Link>
-                    <Button variant="ghost" onClick={() => router.push('/blogs')} className="gap-2">
+                    <Button variant="ghost" onClick={() => router.push('/news')} className="gap-2">
                         <ArrowLeft className="h-4 w-4" />
-                        Back to Articles
+                        Back to News
                     </Button>
                 </div>
             </header>
@@ -78,23 +76,18 @@ export default function BlogPostDetailPage() {
                     <header className="mb-10 text-center">
                         <div className="flex justify-center items-center gap-4 text-sm text-muted-foreground mb-6">
                             <span className="flex items-center gap-1">
-                                <User className="h-4 w-4" />
-                                {blog.display_author_name}
-                            </span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
                                 <Calendar className="h-4 w-4" />
-                                {new Date(blog.blog_created).toLocaleDateString()}
+                                {new Date(news.news_created).toLocaleDateString()}
                             </span>
                         </div>
-                        <h1 className="text-4xl font-extrabold lg:text-5xl !mb-0">{blog.blog_title}</h1>
+                        <h1 className="text-4xl font-extrabold lg:text-5xl !mb-0">{news.news_title}</h1>
                     </header>
 
-                    {blog.blog_heroimg && (
+                    {news.news_img && (
                         <div className="mb-10 w-full h-64 md:h-96 relative rounded-xl overflow-hidden">
                             <Image
-                                src={blog.blog_heroimg}
-                                alt={blog.blog_title}
+                                src={news.news_img}
+                                alt={news.news_title}
                                 fill
                                 className="object-cover"
                             />
@@ -103,16 +96,16 @@ export default function BlogPostDetailPage() {
 
                     <div
                         className="rich-text-content mt-12 mb-20"
-                        dangerouslySetInnerHTML={{ __html: blog.blog_content }}
+                        dangerouslySetInnerHTML={{ __html: news.news_content }}
                     />
                 </article>
 
                 <div className="border-t pt-10 mt-20">
                     <div className="bg-muted/30 p-8 rounded-2xl text-center">
-                        <h3 className="text-lg font-bold mb-2">Enjoyed this article?</h3>
-                        <p className="text-muted-foreground mb-6">Check out more of our pharmaceutical insights and updates.</p>
-                        <Link href="/blogs">
-                            <Button>Explore More Articles</Button>
+                        <h3 className="text-lg font-bold mb-2">Keep reading?</h3>
+                        <p className="text-muted-foreground mb-6">Latest news and announcements from PharmaCatalog.</p>
+                        <Link href="/news">
+                            <Button>See All News</Button>
                         </Link>
                     </div>
                 </div>
@@ -123,18 +116,17 @@ export default function BlogPostDetailPage() {
                     <p className="text-sm text-muted-foreground">© 2024 PharmaCatalog. All rights reserved.</p>
                 </div>
             </footer>
-
             <style jsx global>{`
-        .rich-text-content h1 { font-size: 2.25rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; }
-        .rich-text-content h2 { font-size: 1.875rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; }
-        .rich-text-content p { margin-bottom: 1.5rem; line-height: 1.75; }
-        .rich-text-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; }
-        .rich-text-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1.5rem; }
-        .rich-text-content strong { font-weight: 700; }
-        .rich-text-content em { font-style: italic; }
-        .rich-text-content blockquote { border-left: 4px solid var(--primary); padding-left: 1rem; font-style: italic; margin: 1.5rem 0; }
-        .rich-text-content pre { background: var(--muted); padding: 1rem; borderRadius: 0.5rem; overflow-x: auto; margin-bottom: 1.5rem; }
-      `}</style>
+                .rich-text-content h1 { font-size: 2.25rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; }
+                .rich-text-content h2 { font-size: 1.875rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; }
+                .rich-text-content p { margin-bottom: 1.5rem; line-height: 1.75; }
+                .rich-text-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; }
+                .rich-text-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1.5rem; }
+                .rich-text-content strong { font-weight: 700; }
+                .rich-text-content em { font-style: italic; }
+                .rich-text-content blockquote { border-left: 4px solid var(--primary); padding-left: 1rem; font-style: italic; margin: 1.5rem 0; }
+                .rich-text-content pre { background: var(--muted); padding: 1rem; borderRadius: 0.5rem; overflow-x: auto; margin-bottom: 1.5rem; }
+              `}</style>
         </div>
     );
 }
